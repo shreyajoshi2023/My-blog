@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blogging Platform</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        textarea {
+            height: 100px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .post-container {
+            width: 90%;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+
+        .post {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .post h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .post p {
+            font-size: 16px;
+            margin: 10px 0;
+        }
+
+        .post small {
+            color: #777;
+            font-size: 12px;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 15px;
+        }
+
+        .delete-btn:hover {
+            background: #b02a37;
+        }
+    </style>
+</head>
+<body>
+    <h1>Blogging Platform</h1>
+    
+    <form id="blogForm">
+        <input type="text" id="title" placeholder="Title" required>
+        <textarea id="content" placeholder="Content" required></textarea>
+        <input type="text" id="author" placeholder="Author" required>
+        <button type="submit">Post</button>
+    </form>
+
+    <div class="post-container" id="posts"></div>
+
+    <script>
+        const apiUrl = "/api";  // Adjust this when deploying
+
+        async function fetchPosts() {
+            const res = await fetch(`${apiUrl}/get-posts`);
+            const posts = await res.json();
+            document.getElementById("posts").innerHTML = posts.map(post => 
+                `<div class="post">
+                    <h2>${post.Title}</h2>
+                    <p>${post.Content}</p>
+                    <small>By ${post.Author} on ${new Date(post.Timestamp).toLocaleString()}</small>
+                    <button class="delete-btn" onclick="deletePost('${post.PostID}')">Delete</button>
+                </div>`
+            ).join("");
+        }
+
+        document.getElementById("blogForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const title = document.getElementById("title").value;
+            const content = document.getElementById("content").value;
+            const author = document.getElementById("author").value;
+
+            const res = await fetch(`${apiUrl}/add-post`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ Title: title, Content: content, Author: author }),
+            });
+
+            if (res.ok) {
+                document.getElementById("title").value = "";
+                document.getElementById("content").value = "";
+                document.getElementById("author").value = "";
+                fetchPosts();
+            }
+        });
+
+        async function deletePost(id) {
+            const res = await fetch(`${apiUrl}/delete-post/${id}`, { method: "DELETE" });
+            if (res.ok) fetchPosts();
+        }
+
+        fetchPosts();
+    </script>
+</body>
+</html>
